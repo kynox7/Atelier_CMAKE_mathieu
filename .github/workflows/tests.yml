@@ -52,6 +52,37 @@ jobs:
           cat build/report.txt >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
+  Test_Car:
+    runs-on: ubuntu-latest
+    needs: Compilation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          mkdir -p build
+          cd build
+          cmake ..
+          make
+
+      - name: Run test "car" and capture report
+        shell: bash
+        run: |
+          cd build
+          echo "== Test car 5 ==" > report_car.txt
+          ./src/calculator car 5 | tee -a report_car.txt
+          echo "Exit code: ${PIPESTATUS[0]}" >> report_car.txt
+
+      - name: Upload report as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-car-report
+          path: build/report_car.txt
+          retention-days: 14
+
+
   Test_Sub:
     runs-on: ubuntu-latest
     needs: Compilation
